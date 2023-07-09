@@ -5,8 +5,17 @@ import WebView from 'react-native-webview';
 
 export interface IWPAProps {
   env: 'develop' | 'qa' | 'staging' | 'production';
+  code: string;
   secretkey: string;
-  style: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle>;
+  user?: {
+    phone?: string;
+    email?: string;
+    fullname?: string;
+    birthday?: Date;
+    gender?: 'male' | 'female' | 'other';
+    addres?: string;
+  };
 }
 
 export default function WPA(props: IWPAProps) {
@@ -17,6 +26,21 @@ export default function WPA(props: IWPAProps) {
     staging: 'https://wpa-staging.med247.co',
     production: 'https://wpa.med247.co',
   };
+
+  // verify partner
+
+  // lấy token partner
+  const token = 'Đi lấy token từ code và secretkey';
+
+  // Truyền params vào url web
+  const params: any = { ...(props.user || {}) };
+  params.token = token;
+  const searchParams = new URLSearchParams(params).toString();
+
+  // wep xử lý tạo tài khoản nếu đối tác truyền đủ thông tin cần thiết
+
+  // Xử lý các message liên quan đến notification
+
   return (
     <>
       {showWebView ? (
@@ -33,7 +57,7 @@ export default function WPA(props: IWPAProps) {
           </View>
           <WebView
             source={{
-              uri: `${objUrl[props.env]}?secretkey=${props.secretkey}`,
+              uri: `${objUrl[props.env]}?${searchParams}`,
             }}
             style={styles.mainView}
           />
