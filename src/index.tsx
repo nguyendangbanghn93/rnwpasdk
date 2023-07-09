@@ -24,3 +24,5 @@ export const RnwpasdkView =
     : () => {
         throw new Error(LINKING_ERROR);
       };
+
+export { default as WPA } from './WPA';
