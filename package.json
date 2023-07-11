@@ -164,6 +164,7 @@
     ]
   },
   "dependencies": {
+    "axios": "^1.4.0",
     "react-native-webview": "^13.2.2",
     "tailwind-rn": "^4.2.0"
   }

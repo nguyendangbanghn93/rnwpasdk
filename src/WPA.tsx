@@ -1,6 +1,13 @@
 import * as React from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { Text, View, StyleSheet } from 'react-native';
+import {
+  Text,
+  View,
+  StyleSheet,
+  Alert,
+  SafeAreaView,
+  Platform,
+} from 'react-native';
 import WebView from 'react-native-webview';
 
 export interface IWPAProps {
@@ -8,30 +15,34 @@ export interface IWPAProps {
   code: string;
   secretkey: string;
   style?: StyleProp<ViewStyle>;
+  button?: '';
   user?: {
     phone?: string;
     email?: string;
     fullname?: string;
-    birthday?: Date;
+    birthday?: string;
     gender?: 'male' | 'female' | 'other';
-    addres?: string;
+    address?: string;
   };
 }
 
 export default function WPA(props: IWPAProps) {
   const [showWebView, setShowWebView] = React.useState(false);
+  const [token, setToken] = React.useState<string>('');
   const objUrl = {
     develop: 'https://wpa-qa.med247.co',
     qa: 'https://wpa-qa.med247.co',
     staging: 'https://wpa-staging.med247.co',
     production: 'https://wpa.med247.co',
   };
-
-  // verify partner
+  const objApi = {
+    develop: 'https://qa.pms-api.health.med247.co',
+    qa: 'https://qa.pms-api.health.med247.co',
+    staging: 'https://staging.pms-api.health.med247.co',
+    production: 'https://pms-api.health.med247.co',
+  };
 
   // lấy token partner
-  const token = 'Đi lấy token từ code và secretkey';
-
   // Truyền params vào url web
   const params: any = { ...(props.user || {}) };
   params.token = token;
@@ -44,7 +55,7 @@ export default function WPA(props: IWPAProps) {
   return (
     <>
       {showWebView ? (
-        <View style={styles.containerView}>
+        <SafeAreaView style={styles.containerView}>
           <View style={styles.headerView}>
             <Text
               style={styles.textHeader}
@@ -61,17 +72,39 @@ export default function WPA(props: IWPAProps) {
             }}
             style={styles.mainView}
           />
-        </View>
+        </SafeAreaView>
       ) : (
         <View style={styles.buttonApp}>
-          <Text
-            onPress={() => {
-              setShowWebView(true);
-            }}
-            style={styles.buttonText}
-          >
-            App Med247
-          </Text>
+          {props.button || (
+            <Text
+              onPress={async () => {
+                const tokenResult: string = await getToken(
+                  objApi[props.env],
+                  props.code,
+                  props.secretkey
+                );
+                if (tokenResult) {
+                  setToken(tokenResult);
+                  setShowWebView(true);
+                } else {
+                  Alert.alert(
+                    'Thông báo',
+                    'Đối tác chưa được xác thực vui lòng thử lại sau',
+                    [
+                      {
+                        text: 'Ok',
+                        onPress: () => console.log('Đã đồng ý'),
+                      },
+                    ],
+                    { cancelable: false }
+                  );
+                }
+              }}
+              style={styles.buttonText}
+            >
+              App Med247
+            </Text>
+          )}
         </View>
       )}
     </>
@@ -86,7 +119,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
-  headerView: { padding: 10 },
+  headerView: { padding: 10, paddingTop: Platform.OS === 'ios' ? 30 : 10 },
 
   textHeader: {
     textAlign: 'right',
@@ -97,3 +130,20 @@ const styles = StyleSheet.create({
   buttonApp: { backgroundColor: '#0066b8', padding: 10 },
   buttonText: { color: 'white' },
 });
+
+const getToken = async (
+  apiUrl: string,
+  code: string,
+  secretKey: string
+): Promise<string> => {
+  try {
+    const result = await fetch(
+      `${apiUrl}/users/get_token_partner?code=${code}&secretKey=${secretKey}`
+    );
+    const val = await result.json();
+    return val.data;
+  } catch (error) {
+    console.log(error);
+    return '';
+  }
+};
